@@ -90,7 +90,11 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
             </div>
           </div>
         </div>
-
+	
+	<div className="mt-6 pt-4 border-t border-border">
+          <p className="text-xs text-muted-foreground text-center mb-4">
+            
+          </p>
         
           
           <Button
