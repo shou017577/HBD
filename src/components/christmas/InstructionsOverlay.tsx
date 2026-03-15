@@ -38,7 +38,7 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
         </Button>
 
         <h2 className="text-2xl font-display font-bold text-christmas-gold mb-6 text-center">
-          🎄 欢迎来到魔法圣诞树
+          🪄 歡迎來到魔法劇場
         </h2>
 
         <div className="space-y-4">
@@ -49,7 +49,7 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
             <div>
               <h3 className="font-semibold text-foreground">握拳</h3>
               <p className="text-sm text-muted-foreground">
-                粒子聚合成圣诞树
+                粒子聚合成愛心形狀
               </p>
             </div>
           </div>
@@ -59,9 +59,9 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
               <Hand className="w-6 h-6 text-christmas-gold" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">张开手掌</h3>
+              <h3 className="font-semibold text-foreground">五指張開</h3>
               <p className="text-sm text-muted-foreground">
-                圣诞树爆炸成粒子星空
+                愛心爆炸成浪漫銀河
               </p>
             </div>
           </div>
@@ -71,9 +71,9 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
               <MousePointer className="w-6 h-6 text-christmas-red" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">捏合手势</h3>
+              <h3 className="font-semibold text-foreground">捏合</h3>
               <p className="text-sm text-muted-foreground">
-                选中并放大照片卡片
+                選擇並放大卡片
               </p>
             </div>
           </div>
@@ -83,24 +83,21 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
               <Move className="w-6 h-6 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">移动手部</h3>
+              <h3 className="font-semibold text-foreground">移動手勢</h3>
               <p className="text-sm text-muted-foreground">
-                在星空模式下环绕场景
+                在星空模式下環繞背景
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center mb-4">
-            没有摄像头？双击切换模式，拖动旋转视角！
-          </p>
+        
           
           <Button
             onClick={handleDismiss}
             className="w-full bg-christmas-gold hover:bg-christmas-gold/90 text-christmas-deep-blue font-semibold"
           >
-            开始体验 ✨
+            開始！ ✨
           </Button>
         </div>
       </div>
