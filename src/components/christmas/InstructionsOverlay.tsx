@@ -97,7 +97,7 @@ export function InstructionsOverlay({ onDismiss }: InstructionsOverlayProps) {
             onClick={handleDismiss}
             className="w-full bg-christmas-gold hover:bg-christmas-gold/90 text-christmas-deep-blue font-semibold"
           >
-            開始！ ✨
+            開始✨
           </Button>
         </div>
       </div>
