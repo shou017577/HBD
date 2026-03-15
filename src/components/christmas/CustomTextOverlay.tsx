@@ -75,13 +75,13 @@ export function CustomTextOverlay({ isVisible, text, onTextChange }: CustomTextO
         </DialogTrigger>
         <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-white/20">
           <DialogHeader>
-            <DialogTitle className="text-foreground">自定义祝福语</DialogTitle>
+            <DialogTitle className="text-foreground">自定義祝福</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="输入你的祝福语..."
+              placeholder="輸入你的祝福..."
               className="bg-background/50 border-white/20 text-foreground placeholder:text-muted-foreground"
               maxLength={50}
             />

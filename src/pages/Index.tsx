@@ -10,7 +10,7 @@ import { useHandGesture } from '@/hooks/useHandGesture';
 import { useMouseFallback } from '@/hooks/useMouseFallback';
 import { useChristmasAudio } from '@/hooks/useChristmasAudio';
 import { TreeState, GestureType } from '@/types/christmas';
-import { Github } from 'lucide-react';
+
 
 // Lazy load heavy 3D scene
 const ChristmasScene = lazy(() => import('@/components/christmas/Scene').then(m => ({ default: m.ChristmasScene })));
@@ -19,13 +19,26 @@ const Index = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [treeState, setTreeState] = useState<TreeState>('tree');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([
+    '/photos/1.JPG',
+    '/photos/2.JPG',
+    '/photos/3.JPG',
+    '/photos/4.JPG',
+    '/photos/5.JPG',
+    '/photos/6.JPG',
+    '/photos/7.JPG',
+    '/photos/8.PNG',
+    '/photos/9.JPG',
+    '/photos/10.JPG',
+    '/photos/11.JPG',
+  ]);
   const [focusedPhotoIndex, setFocusedPhotoIndex] = useState<number | null>(null);
   const [orbitRotation, setOrbitRotation] = useState({ x: 0, y: 0 });
   const [cameraPermission, setCameraPermission] = useState<'prompt' | 'granted' | 'denied' | 'requesting'>('prompt');
   const [showInstructions, setShowInstructions] = useState(true);
-  const [customText, setCustomText] = useState('Merry Christmas');
+  const [customText, setCustomText] = useState('小波！生日大快樂！！！');
   const [isStarFocused, setIsStarFocused] = useState(false);
+  const [isPhotoFlipped, setIsPhotoFlipped] = useState(false);
   
   // Use refs for values accessed in callbacks to prevent re-renders
   const treeStateRef = useRef(treeState);
@@ -55,33 +68,41 @@ const Index = () => {
   // Audio hook
   const audio = useChristmasAudio();
 
-  // Gesture handling - use refs to avoid callback recreation
-  const handleGestureChange = useCallback((gesture: GestureType) => {
-    const currentTreeState = treeStateRef.current;
-    const currentPhotos = photosRef.current;
-    
-    switch (gesture) {
-      case 'fist':
-        setTreeState('tree');
+  const handleGestureChange = useCallback((gesture: GestureType | 'clap') => {
+  const currentTreeState = treeStateRef.current;
+  const currentPhotos = photosRef.current;
+
+  switch (gesture) {
+    case 'clap': // 🌟 新增：擊掌時觸發翻面
+      if (currentTreeState === 'focus') {
+        setIsPhotoFlipped(prev => !prev);
+      }
+      break;
+    case 'fist':
+      setTreeState('tree');
+      setFocusedPhotoIndex(null);
+      setIsPhotoFlipped(false); // 重置翻面
+      break;
+    case 'open':
+      setTreeState('galaxy');
+      setFocusedPhotoIndex(null);
+      setIsPhotoFlipped(false); // 重置翻面
+      break;
+    case 'pinch':
+      if (currentTreeState === 'galaxy') {
+        const photoCount = currentPhotos.length > 0 ? currentPhotos.length : 12;
+        const randomIndex = Math.floor(Math.random() * Math.min(photoCount, 12));
+        setFocusedPhotoIndex(randomIndex);
+        setTreeState('focus');
+        setIsPhotoFlipped(false); // 重置翻面
+      } else if (currentTreeState === 'focus') {
         setFocusedPhotoIndex(null);
-        break;
-      case 'open':
         setTreeState('galaxy');
-        setFocusedPhotoIndex(null);
-        break;
-      case 'pinch':
-        if (currentTreeState === 'galaxy') {
-          const photoCount = currentPhotos.length > 0 ? currentPhotos.length : 12;
-          const randomIndex = Math.floor(Math.random() * Math.min(photoCount, 12));
-          setFocusedPhotoIndex(randomIndex);
-          setTreeState('focus');
-        } else if (currentTreeState === 'focus') {
-          setFocusedPhotoIndex(null);
-          setTreeState('galaxy');
-        }
-        break;
-    }
-  }, []); // Empty deps - uses refs
+        setIsPhotoFlipped(false); // 重置翻面
+      }
+      break;
+  }
+}, []);
 
   // Request camera permission - actually request it now
   const handleRequestCamera = useCallback(async () => {
@@ -156,6 +177,7 @@ const Index = () => {
           handPosition={handGesture.isTracking ? handGesture.handPosition : null}
           onReady={handleSceneReady}
           onStarFocusChange={setIsStarFocused}
+          isPhotoFlipped={isPhotoFlipped}
         />
       </Suspense>
 
@@ -191,19 +213,7 @@ const Index = () => {
             <InstructionsOverlay onDismiss={handleDismissInstructions} />
           )}
 
-          {/* State indicator & GitHub link */}
-          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-         
-            <a
-              href="https://github.com/zebo101/christmas-tree"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="glass rounded-full p-2 text-muted-foreground hover:text-foreground transition-colors"
-              title="View on GitHub"
-            >
-              <Github className="w-5 h-5" />
-            </a>
-          </div>
+          
 
           {/* Custom text overlay and edit button */}
           <CustomTextOverlay

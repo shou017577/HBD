@@ -19,10 +19,10 @@ const gestureIcons: Record<GestureType, React.ReactNode> = {
 };
 
 const gestureLabels: Record<GestureType, string> = {
-  none: '检测中...',
-  fist: '握拳 - 圣诞树',
-  open: '张开手掌 - 银河',
-  pinch: '捏合 - 选择',
+  none: '偵測中...',
+  fist: '握拳 - 愛心',
+  open: '張開手掌 - 銀河',
+  pinch: '捏合 - 選擇',
   pointing: '指向',
 };
 
@@ -50,10 +50,10 @@ export function GestureIndicator({
           </div>
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium text-muted-foreground">
-              {cameraPermission === 'requesting' ? '请在弹窗中允许摄像头...' : '👆 点击启用手势控制'}
+              {cameraPermission === 'requesting' ? '請允許視訊鏡頭...' : '👆 點擊啟用手勢控制'}
             </span>
             <span className="text-xs text-muted-foreground">
-              {cameraPermission === 'requesting' ? '等待浏览器权限' : '需要摄像头权限'}
+              {cameraPermission === 'requesting' ? '等待瀏覽器權限' : '需要鏡頭權限'}
             </span>
           </div>
         </button>
@@ -71,25 +71,25 @@ export function GestureIndicator({
               <AlertCircle className="w-5 h-5" />
             </div>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-medium">摄像头权限被拒绝</span>
+              <span className="text-sm font-medium">鏡頭權限被拒绝</span>
               <span className="text-xs text-muted-foreground">
-                使用鼠标双击切换模式
+                使用滑鼠點擊兩下切換
               </span>
             </div>
           </div>
           <div className="text-xs text-muted-foreground bg-black/20 rounded-lg p-2">
-            <p className="font-medium mb-1">如何重新启用：</p>
+            <p className="font-medium mb-1">如何重新啟動：</p>
             <ol className="list-decimal list-inside space-y-0.5">
-              <li>点击地址栏左边的🔒图标</li>
-              <li>将摄像头设为"允许"</li>
-              <li>刷新页面</li>
+              <li>點擊網址左邊的🔒圖示</li>
+              <li>將鏡頭設為"允許"</li>
+              <li>重新整理網頁</li>
             </ol>
           </div>
           <button
             onClick={() => window.location.reload()}
             className="text-xs bg-christmas-gold/20 hover:bg-christmas-gold/30 rounded-lg py-1.5 transition-colors"
           >
-            刷新页面重试
+            重新整理網頁
           </button>
         </div>
       </div>
@@ -113,10 +113,10 @@ export function GestureIndicator({
         
         <div className="flex flex-col">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            {usingMouse ? '鼠标控制' : isTracking ? '手势已识别' : '等待手势'}
+            {usingMouse ? '滑鼠控制' : isTracking ? '手勢已偵測' : '等待手勢'}
           </span>
           <span className="text-sm font-medium">
-            {usingMouse ? '双击切换模式' : gestureLabels[gesture]}
+            {usingMouse ? '點擊兩下切換模式' : gestureLabels[gesture]}
           </span>
         </div>
         

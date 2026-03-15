@@ -63,7 +63,7 @@ export function CameraDebug({ enabled }: CameraDebugProps) {
         <div className="flex items-center justify-between px-3 py-2 bg-black/40">
           <div className="flex items-center gap-2">
             <Video className="w-3 h-3 text-christmas-green" />
-            <span className="text-xs text-white font-medium">摄像头预览</span>
+            <span className="text-xs text-white font-medium">鏡頭預覽</span>
           </div>
           <div className="flex items-center gap-1">
             <button 
@@ -80,7 +80,7 @@ export function CameraDebug({ enabled }: CameraDebugProps) {
             <button 
               onClick={() => setIsVisible(false)}
               className="text-white/70 hover:text-white p-1 transition-colors"
-              title="关闭"
+              title="關閉"
             >
               <X className="w-3 h-3" />
             </button>
@@ -92,7 +92,7 @@ export function CameraDebug({ enabled }: CameraDebugProps) {
           <div className="relative w-[140px] sm:w-[160px] md:w-[180px] lg:w-[260px] aspect-[4/3] bg-black">
             {streamError ? (
               <div className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">
-                摄像头不可用
+                鏡頭不可用
               </div>
             ) : (
               <video

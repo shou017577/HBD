@@ -9,6 +9,7 @@ import { TreeStar } from './TreeStar';
 import { SnowEffect } from './SnowEffect';
 import { TreeState } from '@/types/christmas';
 
+// 🌟 1. 更新介面：接收 isPhotoFlipped
 interface SceneContentProps {
   state: TreeState;
   photos: string[];
@@ -16,6 +17,7 @@ interface SceneContentProps {
   orbitRotation: { x: number; y: number };
   handPosition: { x: number; y: number } | null;
   onStarFocusChange?: (focused: boolean) => void;
+  isPhotoFlipped?: boolean; 
 }
 
 function CameraController({ 
@@ -184,6 +186,7 @@ function CameraController({
   return null;
 }
 
+// 🌟 2. 確實將 isPhotoFlipped 參數解構出來
 function SceneContent({ 
   state, 
   photos, 
@@ -191,13 +194,35 @@ function SceneContent({
   orbitRotation,
   handPosition,
   onStarFocusChange,
+  isPhotoFlipped, 
 }: SceneContentProps) {
   const [isStarFocused, setIsStarFocused] = useState(false);
+  
+  // 🌟 1. 新增一個用來控制「背景群組」的參考 (Ref)
+  const bgGroupRef = useRef<THREE.Group>(null); 
 
   const handleStarFocused = (focused: boolean) => {
     setIsStarFocused(focused);
     onStarFocusChange?.(focused);
   };
+
+  // 🌟 2. 加入平滑隱藏/展開背景的動畫邏輯
+  useFrame((_, delta) => {
+    if (!bgGroupRef.current) return;
+    
+    // 如果有照片被選中，背景目標大小為 0 (隱藏)；否則為 1 (正常顯示)
+    const targetScale = focusedPhotoIndex !== null ? 0 : 1;
+    
+    // 計算平滑過渡 (10 * delta 控制縮放的靈敏速度)
+    const currentScale = bgGroupRef.current.scale.x;
+    const newScale = currentScale + (targetScale - currentScale) * 10 * delta;
+    
+    // 套用縮放
+    bgGroupRef.current.scale.set(newScale, newScale, newScale);
+    
+    // 當背景縮到幾乎看不見時，直接關閉渲染，大幅提升網頁效能！
+    bgGroupRef.current.visible = newScale > 0.01;
+  });
 
   return (
     <>
@@ -208,79 +233,37 @@ function SceneContent({
         onStarFocused={handleStarFocused}
       />
       
-      {/* 
-        Remove Environment component entirely - it loads HDR from raw.githack.com which is blocked in China.
-        Use enhanced lighting instead for reflections.
-      */}
-      
-      {/* Simplified lighting - fewer point lights for better performance */}
+      {/* 💡 燈光必須留在外面，這樣獨立顯示的照片才會有漂亮的光照 */}
       <ambientLight intensity={0.2} />
-      
-      {/* Single main spotlight */}
-      <spotLight 
-        position={[0, 12, 5]} 
-        angle={0.6}
-        penumbra={0.8}
-        intensity={2.5}
-        color="#fff8e8"
-      />
-      
-      {/* Single colored accent light */}
+      <spotLight position={[0, 12, 5]} angle={0.6} penumbra={0.8} intensity={2.5} color="#fff8e8" />
       <pointLight position={[0, -2, 0]} intensity={1.2} color="#ff6633" distance={12} />
       
-      {/* Background stars - reduced count for performance */}
-      <Stars 
-        radius={100} 
-        depth={50} 
-        count={2000} 
-        factor={4} 
-        saturation={0.5} 
-        fade 
-        speed={0.3}
-      />
+      {/* 🌟 3. 用 <group> 把所有不想看到的背景特效通通包起來，並綁定 Ref */}
+      <group ref={bgGroupRef}>
+        <Stars radius={100} depth={50} count={2000} factor={4} saturation={0.5} fade speed={0.3} />
+        <ParticleSystem state={state} particleCount={4000} />
+        <GiftBoxes state={state} />
+        <GemOrnaments state={state} />
+        <TetrahedronSpiral state={state} />
+        <SnowEffect active={isStarFocused} />
+      </group>
       
-      {/* Main particle system */}
-      <ParticleSystem state={state} particleCount={4000} />
-      
-      {/* Christmas gift boxes */}
-      <GiftBoxes state={state} />
-      
-      {/* Gem ornaments (cubes & icosahedrons) */}
-      <GemOrnaments state={state} />
-      
-      {/* Tetrahedron spiral ribbon */}
-      <TetrahedronSpiral state={state} />
-      
-      {/* Photo cards */}
+      {/* 🌟 相片牆獨立在群組外面，所以它絕對不會被隱藏 */}
       <PhotoCards 
         state={state} 
         photos={photos}
         focusedIndex={focusedPhotoIndex}
+        isFlipped={isPhotoFlipped} 
       />
       
-      {/* Tree star topper */}
-      <TreeStar state={state} isFocused={isStarFocused} />
-      
-      {/* Snow effect - activates when star is focused */}
-      <SnowEffect active={isStarFocused} />
-      
-      {/* Post-processing effects - enhanced glow */}
       <EffectComposer>
-        <Bloom 
-          luminanceThreshold={0.85}
-          luminanceSmoothing={0.2}
-          intensity={1.5}
-          mipmapBlur
-        />
-        <Vignette
-          offset={0.2}
-          darkness={0.6}
-        />
+        <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.2} intensity={1.5} mipmapBlur />
+        <Vignette offset={0.2} darkness={0.6} />
       </EffectComposer>
     </>
   );
 }
-
+// 🌟 4. 更新介面：接收 isPhotoFlipped
 interface ChristmasSceneProps {
   state: TreeState;
   photos: string[];
@@ -289,8 +272,10 @@ interface ChristmasSceneProps {
   handPosition: { x: number; y: number } | null;
   onReady?: () => void;
   onStarFocusChange?: (focused: boolean) => void;
+  isPhotoFlipped?: boolean; 
 }
 
+// 🌟 5. 確實將 isPhotoFlipped 參數從最外層解構出來
 export function ChristmasScene({ 
   state, 
   photos, 
@@ -299,6 +284,7 @@ export function ChristmasScene({
   handPosition,
   onReady,
   onStarFocusChange,
+  isPhotoFlipped, 
 }: ChristmasSceneProps) {
   // Call onReady after mount
   useEffect(() => {
@@ -323,6 +309,7 @@ export function ChristmasScene({
       <color attach="background" args={['#0a1628']} />
       <fog attach="fog" args={['#0a1628', 15, 35]} />
       
+      {/* 🌟 6. 把參數傳遞給內部的 SceneContent */}
       <SceneContent 
         state={state}
         photos={photos}
@@ -330,6 +317,7 @@ export function ChristmasScene({
         orbitRotation={orbitRotation}
         handPosition={handPosition}
         onStarFocusChange={onStarFocusChange}
+        isPhotoFlipped={isPhotoFlipped} 
       />
     </Canvas>
   );

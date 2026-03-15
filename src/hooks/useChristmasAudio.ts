@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 // Custom Christmas music
-const CHRISTMAS_MUSIC_URL = '/audio/christmas-music.mp3';
+const CHRISTMAS_MUSIC_URL = '/audio/audio.mp3';
 
 export function useChristmasAudio() {
   const [isPlaying, setIsPlaying] = useState(false);

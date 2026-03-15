@@ -3,7 +3,6 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TreeState } from '@/types/christmas';
 
-// Generate local placeholder images (avoid external CDN for China users)
 const generatePlaceholder = (index: number): string => {
   const canvas = document.createElement('canvas');
   canvas.width = 400;
@@ -11,14 +10,8 @@ const generatePlaceholder = (index: number): string => {
   const ctx = canvas.getContext('2d');
   if (ctx) {
     const gradients = [
-      ['#c41e3a', '#8b0000'],
-      ['#228b22', '#006400'],
-      ['#ffd700', '#daa520'],
-      ['#1e90ff', '#0066cc'],
-      ['#ff69b4', '#ff1493'],
-      ['#9932cc', '#663399'],
-      ['#ff6347', '#ff4500'],
-      ['#20b2aa', '#008b8b'],
+      ['#c41e3a', '#8b0000'], ['#228b22', '#006400'], ['#ffd700', '#daa520'],
+      ['#1e90ff', '#0066cc'], ['#ff69b4', '#ff1493'], ['#9932cc', '#663399'],
     ];
     const [color1, color2] = gradients[index % gradients.length];
     const gradient = ctx.createLinearGradient(0, 0, 400, 400);
@@ -26,8 +19,7 @@ const generatePlaceholder = (index: number): string => {
     gradient.addColorStop(1, color2);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 400, 400);
-    
-    const emojis = ['🎄', '⭐', '🎁', '❄️', '🔔', '🎅', '🦌', '🕯️', '🍪', '🧦'];
+    const emojis = ['🎂', '⭐', '🎁', '🎈', '💖', '🥳'];
     ctx.font = '120px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -44,10 +36,57 @@ const getDefaultPhotos = (): string[] => {
   return cachedPlaceholders;
 };
 
+const blessings = [
+  "心柔，生日快樂！\n願妳每天充滿笑容",
+  "祝妳 TOEIC 考試\n順利突破 550 分！",
+  "願妳的狗狗永遠\n平安健康、快快樂樂",
+  "祝影像修復的研究\n與實驗數據大突破！",
+  "希望妳未來的每一趟\n旅遊行程都順心",
+  "祝每天都能享用\n美味的低碳水晚餐！",
+  "願妳能開發出超棒的\n生成式 AI 應用",
+  "祝妳有空多去看棒球\n享受熱血時光！",
+  "換上漂亮的透色系美甲\n保持心情美美的！",
+  "祝輕量級模型的論文\n能夠順利寫完！",
+  "願生活裡的每一天\n都像星空般閃耀",
+  "心柔，祝妳事事順心\n永遠幸福快樂！"
+];
+
+const generateDynamicBackTexture = (index: number): THREE.CanvasTexture => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 500;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#FFE4E1'; 
+    ctx.fillRect(0, 0, 400, 500);
+    ctx.strokeStyle = '#FF69B4'; 
+    ctx.lineWidth = 12;
+    ctx.strokeRect(15, 15, 370, 470);
+    ctx.fillStyle = '#C71585';
+    ctx.font = 'bold 34px "PingFang TC", "Microsoft JhengHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = blessings[index % blessings.length];
+    const lines = text.split('\n');
+    if (lines.length === 2) {
+      ctx.fillText(lines[0], 200, 210);
+      ctx.fillText(lines[1], 200, 280);
+    } else {
+      ctx.fillText(text, 200, 250);
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+};
+
+const backTextures = Array.from({ length: 12 }, (_, i) => generateDynamicBackTexture(i));
+
 interface PhotoCardsProps {
   state: TreeState;
   photos?: string[];
   focusedIndex: number | null;
+  isFlipped?: boolean; 
 }
 
 function generateTreePhotoPosition(index: number, total: number): [number, number, number] {
@@ -57,7 +96,6 @@ function generateTreePhotoPosition(index: number, total: number): [number, numbe
   const y = t * height - height / 2 + 0.5;
   const radius = maxRadius * (1 - t * 0.85);
   const angle = t * Math.PI * 10 + index * Math.PI * 0.5;
-  
   return [Math.cos(angle) * radius, y, Math.sin(angle) * radius];
 }
 
@@ -65,7 +103,6 @@ function generateGalaxyPhotoPosition(): [number, number, number] {
   const radius = 4 + Math.random() * 6;
   const theta = Math.random() * Math.PI * 2;
   const phi = Math.acos(2 * Math.random() - 1);
-  
   return [
     radius * Math.sin(phi) * Math.cos(theta),
     radius * Math.sin(phi) * Math.sin(theta) * 0.5,
@@ -73,21 +110,20 @@ function generateGalaxyPhotoPosition(): [number, number, number] {
   ];
 }
 
-// Spring physics constants
 const SPRING_STIFFNESS = 25;
 const SPRING_DAMPING = 8;
 const SCALE_STIFFNESS = 30;
 const SCALE_DAMPING = 10;
+const ROTATION_STIFFNESS = 20; 
 
-// Card dimensions
 const cardWidth = 1;
 const cardHeight = 1.25;
-const photoWidth = 0.85;
-const photoHeight = 0.75;
+// 🌟 稍微放大照片幾何，減少白邊感
+const photoWidth = 0.94;
+const photoHeight = 1.15;
 const borderRadius = 0.03;
-const photoOffsetY = 0.12;
+const photoOffsetY = 0.02; // 調整照片垂直居中
 
-// Pre-create shared geometries
 const cardGeometry = (() => {
   const shape = new THREE.Shape();
   shape.moveTo(-cardWidth/2 + borderRadius, -cardHeight/2);
@@ -104,11 +140,9 @@ const cardGeometry = (() => {
 
 const photoGeometry = new THREE.PlaneGeometry(photoWidth, photoHeight);
 const cardMaterial = new THREE.MeshBasicMaterial({
-  color: '#e5e0d5',
+  color: '#ffffff',
   side: THREE.DoubleSide,
   toneMapped: true,
-  opacity: 0.95,
-  transparent: true,
 });
 
 interface CardData {
@@ -118,18 +152,17 @@ interface CardData {
   velocity: THREE.Vector3;
   scale: number;
   scaleVelocity: number;
+  rotationY: number;        
+  rotationVelocity: number; 
   texture: THREE.Texture | null;
-  textureUrl: string; // Track URL to detect changes
+  textureUrl: string;
   time: number;
 }
 
-export function PhotoCards({ state, photos, focusedIndex }: PhotoCardsProps) {
+export function PhotoCards({ state, photos, focusedIndex, isFlipped = false }: PhotoCardsProps) {
   const photoUrls = photos && photos.length > 0 ? photos : getDefaultPhotos();
-  const groupRef = useRef<THREE.Group>(null);
   const meshRefs = useRef<(THREE.Group | null)[]>([]);
   const { camera } = useThree();
-  
-  // Initialize card data with spring physics
   const cardDataRef = useRef<CardData[]>([]);
   
   const photoData = useMemo(() => {
@@ -140,14 +173,12 @@ export function PhotoCards({ state, photos, focusedIndex }: PhotoCardsProps) {
     }));
   }, [photoUrls]);
 
-  // Initialize card data and load textures
   useEffect(() => {
     const loader = new THREE.TextureLoader();
     loader.crossOrigin = 'anonymous';
     
     cardDataRef.current = photoData.map((photo, i) => {
       const existing = cardDataRef.current[i];
-      // Check if URL changed - need to reload texture
       const urlChanged = existing?.textureUrl !== photo.url;
       
       const data: CardData = {
@@ -157,133 +188,93 @@ export function PhotoCards({ state, photos, focusedIndex }: PhotoCardsProps) {
         velocity: existing?.velocity || new THREE.Vector3(0, 0, 0),
         scale: existing?.scale || 0.4,
         scaleVelocity: existing?.scaleVelocity || 0,
-        texture: urlChanged ? null : (existing?.texture || null), // Reset if URL changed
+        rotationY: existing?.rotationY || 0,
+        rotationVelocity: existing?.rotationVelocity || 0,
+        texture: urlChanged ? null : (existing?.texture || null),
         textureUrl: photo.url,
         time: existing?.time || Math.random() * Math.PI * 2,
       };
       
-      // Load texture if not loaded or URL changed
       if (!data.texture) {
-        loader.load(
-          photo.url,
-          (tex) => {
-            tex.minFilter = THREE.LinearFilter;
-            tex.magFilter = THREE.LinearFilter;
-            tex.colorSpace = THREE.SRGBColorSpace;
-            if (cardDataRef.current[i]) {
-              cardDataRef.current[i].texture = tex;
-              cardDataRef.current[i].textureUrl = photo.url;
-            }
-          },
-          undefined,
-          () => {
-            // Fallback placeholder on error
-            const canvas = document.createElement('canvas');
-            canvas.width = 200;
-            canvas.height = 200;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.fillStyle = `hsl(${(i * 30) % 360}, 60%, 50%)`;
-              ctx.fillRect(0, 0, 200, 200);
-              ctx.font = '64px sans-serif';
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText('🎄', 100, 100);
-            }
-            const placeholderTex = new THREE.CanvasTexture(canvas);
-            placeholderTex.colorSpace = THREE.SRGBColorSpace;
-            if (cardDataRef.current[i]) {
-              cardDataRef.current[i].texture = placeholderTex;
-            }
+        loader.load(photo.url, (tex) => {
+          tex.colorSpace = THREE.SRGBColorSpace;
+          // 🌟 優化畫質：強制使用高品質濾波
+          tex.minFilter = THREE.LinearFilter;
+          tex.magFilter = THREE.LinearFilter;
+          if (cardDataRef.current[i]) {
+            cardDataRef.current[i].texture = tex;
+            cardDataRef.current[i].textureUrl = photo.url;
           }
-        );
+        });
       }
-      
       return data;
     });
   }, [photoData]);
 
-  // Single useFrame for ALL cards - major performance improvement
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.033);
-    const cards = cardDataRef.current;
+    const hasFocus = focusedIndex !== null;
     
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i];
+    for (let i = 0; i < cardDataRef.current.length; i++) {
+      const card = cardDataRef.current[i];
       const meshGroup = meshRefs.current[i];
       if (!meshGroup || !card) continue;
       
       card.time += dt;
       const isFocused = focusedIndex === i;
       
-      // Calculate target position
-      const targetPos = isFocused 
-        ? new THREE.Vector3(0, 0, 0.8)
-        : state === 'tree' 
-          ? new THREE.Vector3(...card.treePosition)
-          : new THREE.Vector3(...card.galaxyPosition);
+      // Z 軸 2.5 讓它彈出得更近更大
+      const targetPos = isFocused ? new THREE.Vector3(0, 0, 0.08) : new THREE.Vector3(...(state === 'tree' ? card.treePosition : card.galaxyPosition));
+      const targetScale = hasFocus ? (isFocused ? 8.5 : 0) : 0.4;
+      const targetRotationY = (isFocused && isFlipped) ? Math.PI : 0;
       
-      const targetScale = isFocused ? 5 : 0.4;
-      
-      // Spring physics for position
+      // 位置彈簧
       const displacement = card.position.clone().sub(targetPos);
-      const springForce = displacement.multiplyScalar(-SPRING_STIFFNESS);
-      const dampingForce = card.velocity.clone().multiplyScalar(-SPRING_DAMPING);
-      const acceleration = springForce.add(dampingForce);
-      
-      card.velocity.add(acceleration.multiplyScalar(dt));
+      card.velocity.add(displacement.multiplyScalar(-SPRING_STIFFNESS).add(card.velocity.clone().multiplyScalar(-SPRING_DAMPING)).multiplyScalar(dt));
       card.position.add(card.velocity.clone().multiplyScalar(dt));
       
-      // Spring physics for scale
-      const scaleDisplacement = card.scale - targetScale;
-      const scaleSpringForce = -SCALE_STIFFNESS * scaleDisplacement;
-      const scaleDampingForce = -SCALE_DAMPING * card.scaleVelocity;
-      card.scaleVelocity += (scaleSpringForce + scaleDampingForce) * dt;
+      // 縮放彈簧
+      card.scaleVelocity += (-SCALE_STIFFNESS * (card.scale - targetScale) - SCALE_DAMPING * card.scaleVelocity) * dt;
       card.scale += card.scaleVelocity * dt;
+
+      // 旋轉彈簧
+      card.rotationVelocity += (-ROTATION_STIFFNESS * (card.rotationY - targetRotationY) - SCALE_DAMPING * card.rotationVelocity) * dt;
+      card.rotationY += card.rotationVelocity * dt;
       
-      // Apply to mesh
       meshGroup.position.copy(card.position);
-      if (!isFocused) {
-        meshGroup.position.y += Math.sin(card.time * 0.5) * 0.005;
-      }
-      meshGroup.scale.set(card.scale, card.scale, 1);
+      if (!isFocused) meshGroup.position.y += Math.sin(card.time * 0.5) * 0.005;
+      
+      const renderScale = Math.max(0, card.scale);
+      meshGroup.visible = renderScale > 0.05;
+      meshGroup.scale.set(renderScale, renderScale, 1);
       meshGroup.lookAt(camera.position);
+      meshGroup.rotateY(card.rotationY);
     }
   });
 
-  // Force re-render when textures load
   const [, forceUpdate] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      const allLoaded = cardDataRef.current.every(c => c.texture);
-      if (allLoaded) {
-        clearInterval(interval);
-      }
       forceUpdate(n => n + 1);
-    }, 100);
+    }, 200);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <group ref={groupRef}>
-      {photoData.map((photo, i) => {
-        const texture = cardDataRef.current[i]?.texture;
-        return (
-          <group 
-            key={i} 
-            ref={el => { meshRefs.current[i] = el; }}
-            position={photo.treePosition}
-            scale={[0.4, 0.4, 1]}
-          >
-            <mesh geometry={cardGeometry} renderOrder={1} material={cardMaterial} />
-            {texture && (
-              <mesh geometry={photoGeometry} position={[0, photoOffsetY, 0.001]} renderOrder={2}>
-                <meshBasicMaterial map={texture} side={THREE.DoubleSide} toneMapped={true} />
-              </mesh>
-            )}
-          </group>
-        );
-      })}
+    <group>
+      {photoData.map((photo, i) => (
+        <group key={i} ref={el => { meshRefs.current[i] = el; }}>
+          <mesh geometry={cardGeometry} position={[0, 0, -0.002]} material={cardMaterial} />
+          {cardDataRef.current[i]?.texture && (
+            <mesh geometry={photoGeometry} position={[0, photoOffsetY, 0.001]}>
+              <meshBasicMaterial map={cardDataRef.current[i].texture} side={THREE.FrontSide} />
+            </mesh>
+          )}
+          <mesh geometry={photoGeometry} position={[0, photoOffsetY, -0.003]} rotation={[0, Math.PI, 0]}>
+            <meshBasicMaterial map={backTextures[i % 12]} side={THREE.FrontSide} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
