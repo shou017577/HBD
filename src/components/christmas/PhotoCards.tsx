@@ -37,18 +37,18 @@ const getDefaultPhotos = (): string[] => {
 };
 
 const blessings = [
-  "心柔，生日快樂！\n願妳每天充滿笑容",
-  "祝妳 TOEIC 考試\n順利突破 550 分！",
-  "願妳的狗狗永遠\n平安健康、快快樂樂",
-  "祝影像修復的研究\n與實驗數據大突破！",
-  "希望妳未來的每一趟\n旅遊行程都順心",
-  "祝每天都能享用\n美味的低碳水晚餐！",
-  "願妳能開發出超棒的\n生成式 AI 應用",
-  "祝妳有空多去看棒球\n享受熱血時光！",
-  "換上漂亮的透色系美甲\n保持心情美美的！",
-  "祝輕量級模型的論文\n能夠順利寫完！",
-  "願生活裡的每一天\n都像星空般閃耀",
-  "心柔，祝妳事事順心\n永遠幸福快樂！"
+  "一家人就是要整整齊齊\n雖然小狗那個表情不知道是啥小",
+  "小波散發滿滿的母愛＋貪吃小狗",
+  "誒嘿嘿/n以後可不可以好好拍照\n不知道",
+  "你知道 我知道 獨眼龍也知道",
+  "必須要偷圖一下吧",
+  "必須送你進去看權老虎！\n小狗又是各種亂入生日卡片",
+  "偷圖再＋1",
+  "原來香港已經是一年前的事了...",
+  "神秘角度\n突然發現我們變成一個8️⃣",
+  "等下可以出發去找你的生日禮物了！！！",
+  "永生花終於換個樣式了\n使用次數：無限次",
+  "Happy Birthday to you！"
 ];
 
 const generateDynamicBackTexture = (index: number): THREE.CanvasTexture => {
@@ -57,20 +57,27 @@ const generateDynamicBackTexture = (index: number): THREE.CanvasTexture => {
   canvas.height = 500;
   const ctx = canvas.getContext('2d');
   if (ctx) {
+    // 1. 維持原本的柔和粉色底色（如果你想改成純白，可以把 '#FFE4E1' 改成 '#FFFFFF'）
     ctx.fillStyle = '#FFE4E1'; 
     ctx.fillRect(0, 0, 400, 500);
-    ctx.strokeStyle = '#FF69B4'; 
-    ctx.lineWidth = 12;
-    ctx.strokeRect(15, 15, 370, 470);
-    ctx.fillStyle = '#C71585';
-    ctx.font = 'bold 34px "PingFang TC", "Microsoft JhengHei", sans-serif';
+
+    // 🌟 已將外框的程式碼 (strokeStyle, lineWidth, strokeRect) 刪除！
+
+    // 2. 將文字顏色改為黑色 (這裡我用 '#222222'，是一種極深的碳黑色，在螢幕上看比純黑死白更有質感)
+    ctx.fillStyle = '#222222';
+    
+    // 3. 字體大小小一號：從 34px 縮小為 28px
+    ctx.font = 'bold 28px "PingFang TC", "Microsoft JhengHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
     const text = blessings[index % blessings.length];
     const lines = text.split('\n');
+    
+    // 🌟 配合變小的字體，我稍微微調了行距 (Y軸座標)，讓兩行字靠得近一點，視覺更置中
     if (lines.length === 2) {
-      ctx.fillText(lines[0], 200, 210);
-      ctx.fillText(lines[1], 200, 280);
+      ctx.fillText(lines[0], 200, 225);
+      ctx.fillText(lines[1], 200, 275);
     } else {
       ctx.fillText(text, 200, 250);
     }
@@ -118,11 +125,10 @@ const ROTATION_STIFFNESS = 20;
 
 const cardWidth = 1;
 const cardHeight = 1.25;
-// 🌟 稍微放大照片幾何，減少白邊感
 const photoWidth = 0.94;
 const photoHeight = 1.15;
 const borderRadius = 0.03;
-const photoOffsetY = 0.02; // 調整照片垂直居中
+const photoOffsetY = 0.02; 
 
 const cardGeometry = (() => {
   const shape = new THREE.Shape();
@@ -181,12 +187,14 @@ export function PhotoCards({ state, photos, focusedIndex, isFlipped = false }: P
       const existing = cardDataRef.current[i];
       const urlChanged = existing?.textureUrl !== photo.url;
       
+      const initialScale = i === 11 ? 0.8 : 0.4;
+      
       const data: CardData = {
         treePosition: photo.treePosition,
         galaxyPosition: photo.galaxyPosition,
         position: existing?.position || new THREE.Vector3(...photo.treePosition),
         velocity: existing?.velocity || new THREE.Vector3(0, 0, 0),
-        scale: existing?.scale || 0.4,
+        scale: existing?.scale || initialScale,
         scaleVelocity: existing?.scaleVelocity || 0,
         rotationY: existing?.rotationY || 0,
         rotationVelocity: existing?.rotationVelocity || 0,
@@ -198,7 +206,6 @@ export function PhotoCards({ state, photos, focusedIndex, isFlipped = false }: P
       if (!data.texture) {
         loader.load(photo.url, (tex) => {
           tex.colorSpace = THREE.SRGBColorSpace;
-          // 🌟 優化畫質：強制使用高品質濾波
           tex.minFilter = THREE.LinearFilter;
           tex.magFilter = THREE.LinearFilter;
           if (cardDataRef.current[i]) {
@@ -223,9 +230,18 @@ export function PhotoCards({ state, photos, focusedIndex, isFlipped = false }: P
       card.time += dt;
       const isFocused = focusedIndex === i;
       
-      // Z 軸 2.5 讓它彈出得更近更大
       const targetPos = isFocused ? new THREE.Vector3(0, 0, 0.08) : new THREE.Vector3(...(state === 'tree' ? card.treePosition : card.galaxyPosition));
-      const targetScale = hasFocus ? (isFocused ? 8.5 : 0) : 0.4;
+      
+      const isSpecialPhoto = i === 11;
+      
+      // 🌟 分別設定「背景平時大小」與「捏合聚焦大小」
+      const baseScale = isSpecialPhoto ? 0.8 : 0.4;
+      const focusedScale = isSpecialPhoto ? 12.0 : 8.5; // <--- 第 12 張放大到 12.0 倍！
+      
+      const targetScale = hasFocus 
+        ? (isFocused ? focusedScale : 0) // 如果被聚焦，就套用對應的放大倍率
+        : baseScale;
+        
       const targetRotationY = (isFocused && isFlipped) ? Math.PI : 0;
       
       // 位置彈簧
@@ -262,19 +278,27 @@ export function PhotoCards({ state, photos, focusedIndex, isFlipped = false }: P
 
   return (
     <group>
-      {photoData.map((photo, i) => (
-        <group key={i} ref={el => { meshRefs.current[i] = el; }}>
-          <mesh geometry={cardGeometry} position={[0, 0, -0.002]} material={cardMaterial} />
-          {cardDataRef.current[i]?.texture && (
-            <mesh geometry={photoGeometry} position={[0, photoOffsetY, 0.001]}>
-              <meshBasicMaterial map={cardDataRef.current[i].texture} side={THREE.FrontSide} />
+      {photoData.map((photo, i) => {
+        const initialScale = i === 11 ? 0.8 : 0.4;
+        
+        return (
+          <group 
+            key={i} 
+            ref={el => { meshRefs.current[i] = el; }}
+            scale={[initialScale, initialScale, 1]}
+          >
+            <mesh geometry={cardGeometry} position={[0, 0, -0.002]} material={cardMaterial} />
+            {cardDataRef.current[i]?.texture && (
+              <mesh geometry={photoGeometry} position={[0, photoOffsetY, 0.001]}>
+                <meshBasicMaterial map={cardDataRef.current[i].texture} side={THREE.FrontSide} />
+              </mesh>
+            )}
+            <mesh geometry={photoGeometry} position={[0, photoOffsetY, -0.003]} rotation={[0, Math.PI, 0]}>
+              <meshBasicMaterial map={backTextures[i % 12]} side={THREE.FrontSide} />
             </mesh>
-          )}
-          <mesh geometry={photoGeometry} position={[0, photoOffsetY, -0.003]} rotation={[0, Math.PI, 0]}>
-            <meshBasicMaterial map={backTextures[i % 12]} side={THREE.FrontSide} />
-          </mesh>
-        </group>
-      ))}
+          </group>
+        );
+      })}
     </group>
   );
 }

@@ -31,6 +31,7 @@ const Index = () => {
     '/photos/9.JPG',
     '/photos/10.JPG',
     '/photos/11.JPG',
+    '/photos/12.png'
   ]);
   const [focusedPhotoIndex, setFocusedPhotoIndex] = useState<number | null>(null);
   const [orbitRotation, setOrbitRotation] = useState({ x: 0, y: 0 });
